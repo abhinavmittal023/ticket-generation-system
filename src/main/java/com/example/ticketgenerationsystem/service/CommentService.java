@@ -26,15 +26,9 @@ public class CommentService {
     private CommentRepo commentRepo;
     @Autowired
     private TicketService ticketService;
-    @Autowired
-    private UserService userService;
 
-    public Comment add(CommentAddRequest request, int ticketId, int userId) {
+    public Comment add(CommentAddRequest request, int ticketId, User user) {
         try {
-            User user = userService.findById(userId);
-            if(user == null) {
-                throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
-            }
             Ticket ticket = ticketService.findById(ticketId);
             if(ticket == null) {
                 throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
@@ -63,13 +57,16 @@ public class CommentService {
         }
     }
 
-    public void updateComment(CommentUpdateRequest request, int commentId) {
+    public void updateComment(CommentUpdateRequest request, int commentId, User user) {
         try {
             Optional<Comment> commentOptional = commentRepo.findById(commentId);
             if(!commentOptional.isPresent()) {
                 throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
             }
             Comment comment = commentOptional.get();
+            if(comment.getUser() != user) {
+                throw new ApiException("401", "Unauthorized");
+            }
             comment.setText(request.getText());
             commentRepo.save(comment);
         } catch(DataIntegrityViolationException e) {
@@ -79,9 +76,13 @@ public class CommentService {
         }
     }
 
-    public void delete(int commentId) {
+    public void delete(int commentId, User user) {
         try {
-            commentRepo.deleteById(commentId);
+            Optional<Comment> commentOptional = commentRepo.findById(commentId);
+            if(!commentOptional.isPresent() || commentOptional.get().getUser() != user) {
+                return;
+            }
+            commentRepo.delete(commentOptional.get());
         } catch(DataIntegrityViolationException e) {
             throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
         } catch(Exception e) {

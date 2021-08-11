@@ -17,6 +17,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,9 +51,8 @@ public class OperatorService {
         }
     }
 
-    public Operator update(OperatorUpdateRequest operatorUpdateDTO, int operatorId)  {
-
-        Optional<Operator> optionalOperator = operatorRepo.findById(operatorId);
+    public Operator update(OperatorUpdateRequest operatorUpdateDTO, User user)  {
+        Optional<Operator> optionalOperator = operatorRepo.findByUser(user);
         if (!optionalOperator.isPresent()) {
             throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
         }
@@ -68,9 +68,8 @@ public class OperatorService {
     }
 
     @Transactional
-    public void delete(int operatorId)  {
-
-        Optional<Operator> optionalOperator = operatorRepo.findById(operatorId);
+    public void delete(User user)  {
+        Optional<Operator> optionalOperator = operatorRepo.findByUser(user);
         if (!optionalOperator.isPresent()) {
             throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
         }
@@ -91,7 +90,7 @@ public class OperatorService {
         }
     }
 
-    public List<OperatorDTO> getAll()  {
+    public List<OperatorDTO> findAll()  {
         Iterable <Operator> operators = operatorRepo.findAll();
         List<OperatorDTO> operatorDTOList = new ArrayList<>();
         for(Operator operator: operators) {
@@ -100,7 +99,7 @@ public class OperatorService {
         return operatorDTOList;
     }
 
-    public OperatorDTO getOne(int operatorId)  {
+    public OperatorDTO findById(int operatorId)  {
         Optional<Operator> operatorOptional = operatorRepo.findById(operatorId);
         if(operatorOptional.isPresent()) {
             return OperatorConvertor.convert(operatorOptional.get());

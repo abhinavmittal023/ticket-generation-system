@@ -21,15 +21,29 @@ public class UserService {
             return userRepo.save(user);
         } catch (DataIntegrityViolationException e) {
             throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
+        } catch (Exception e) {
+            throw new ApiException("500", e.getMessage());
         }
     }
 
-    public User findById(int userId)  {
+    public Optional<User> findById(int userId)  {
         try {
-            Optional<User> userOptional = userRepo.findById(userId);
+            return userRepo.findById(userId);
+        } catch (DataIntegrityViolationException e) {
+            throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
+        } catch (Exception e) {
+            throw new ApiException("500", e.getMessage());
+        }
+    }
+
+    public User findByEmailId(String emailId) {
+        try {
+            Optional<User> userOptional = userRepo.findByEmailId(emailId);
             return userOptional.orElse(null);
         } catch (DataIntegrityViolationException e) {
             throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
+        } catch (Exception e) {
+            throw new ApiException("500", e.getMessage());
         }
     }
 
@@ -42,7 +56,7 @@ public class UserService {
         }
     }
 
-    public List<User> findAll(int role)  {
+    public List<User> findAllByRole(int role)  {
         try {
             return userRepo.findAllByUserType(role);
         } catch (Exception e) {

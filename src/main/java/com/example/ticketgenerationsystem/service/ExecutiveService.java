@@ -34,6 +34,9 @@ public class ExecutiveService {
     @Transactional
     public Executive add(ExecutiveSignupRequest request, int role) {
         try {
+            if(role == Constants.roleMap.get(Constants.ROLE_ADMIN) && userService.findAllByRole(role).size() > 0) {
+                return null;
+            }
             User user = userService.add(UserConvertor.convert(request, role));
             return executiveRepo.save(ExecutiveConvertor.convert(request, user));
         } catch (DataIntegrityViolationException e) {
@@ -46,7 +49,7 @@ public class ExecutiveService {
     public List<Executive> findAll(int role) {
         try {
             List<Executive> executiveList = new ArrayList<>();
-            List<User> userList = userService.findAll(role);
+            List<User> userList = userService.findAllByRole(role);
             for (User user : userList) {
                 executiveList.add(executiveRepo.findByUser(user));
             }
@@ -90,19 +93,35 @@ public class ExecutiveService {
         }
     }
 
-    public Executive updatePassword(PasswordUpdateRequest request, int executiveId) {
+    public void updatePassword(PasswordUpdateRequest request, User user) {
         try {
-            Optional<Executive> executiveOptional = executiveRepo.findById(executiveId);
-            if (!executiveOptional.isPresent()) {
-                throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
-            }
-            Executive executive = executiveOptional.get();
-            if(!HashGenerator.getMd5(request.getOldPassword()).equals(executive.getUser().getPassword())) {
+            if(!HashGenerator.getMd5(request.getOldPassword()).equals(user.getPassword())) {
                 throw new ApiException("400", "Old Passwords Mismatch");
             }
-            executive.getUser().setPassword(HashGenerator.getMd5(request.getNewPassword()));
-            userService.update(executive.getUser());
-            return executive;
+            user.setPassword(HashGenerator.getMd5(request.getNewPassword()));
+            userService.update(user);
+        } catch (Exception e) {
+            throw new ApiException("500", e.getMessage());
+        }
+    }
+
+    public Optional<Executive> findById(int executiveId) {
+        try {
+            return executiveRepo.findById(executiveId);
+        } catch (Exception e) {
+            throw new ApiException("500", e.getMessage());
+        }
+    }
+
+    @Transactional
+    public void delete(int executiveId) {
+        try {
+            Optional<Executive> executiveOptional = executiveRepo.findById(executiveId);
+            if (!executiveOptional.isPresent() || executiveOptional.get().getUser().getUserType() == Constants.roleMap.get(Constants.ROLE_ADMIN)) {
+                throw new ApiException("500", Constants.OPERATION_NOT_ALLOWED);
+            }
+            executiveRepo.delete(executiveOptional.get());
+            userService.delete(executiveOptional.get().getUser().getId());
         } catch (Exception e) {
             throw new ApiException("500", e.getMessage());
         }

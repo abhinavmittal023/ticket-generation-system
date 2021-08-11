@@ -1,11 +1,15 @@
 package com.example.ticketgenerationsystem.controller;
 
+import com.example.ticketgenerationsystem.constant.Constants;
 import com.example.ticketgenerationsystem.dto.OperatorDTO;
+import com.example.ticketgenerationsystem.entity.User;
 import com.example.ticketgenerationsystem.request.OperatorSignupRequest;
 import com.example.ticketgenerationsystem.request.OperatorUpdateRequest;
 import com.example.ticketgenerationsystem.response.ResponseBean;
+import com.example.ticketgenerationsystem.service.AuthorizationService;
 import com.example.ticketgenerationsystem.service.OperatorService;
 import com.example.ticketgenerationsystem.validator.OperatorValidator;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +19,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/operator")
+@Log4j2
 public class OperatorController {
     @Autowired
     private OperatorService operatorService;
+    @Autowired
+    private AuthorizationService authService;
 
     @PostMapping
     public ResponseEntity<ResponseBean<Object>> signup(@RequestBody OperatorSignupRequest request) {
@@ -26,28 +33,44 @@ public class OperatorController {
         return new ResponseEntity<>(new ResponseBean<>(), HttpStatus.OK);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ResponseBean<Object>> update(@RequestBody OperatorUpdateRequest request, @PathVariable int id) {
+    @PutMapping
+    public ResponseEntity<ResponseBean<Object>> update(@RequestBody OperatorUpdateRequest request, @RequestHeader("Authorization") String token) {
+        User user = authService.authorize(token);
+        if(user == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         OperatorValidator.validate(request);
-        operatorService.update(request, id);
+        operatorService.update(request, user);
         return new ResponseEntity<>(new ResponseBean<>(), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseBean<Object>> delete(@PathVariable int id) {
-        operatorService.delete(id);
+    @DeleteMapping
+    public ResponseEntity<ResponseBean<Object>> delete(@RequestHeader("Authorization") String token) {
+        User user = authService.authorize(token);
+        if(user == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        operatorService.delete(user);
         return new ResponseEntity<>(new ResponseBean<>(), HttpStatus.OK);
     }
 
     @GetMapping
-    public ResponseEntity<List<OperatorDTO>> getAll() {
-        List<OperatorDTO> operatorDTOList = operatorService.getAll();
+    public ResponseEntity<List<OperatorDTO>> getAll(@RequestHeader("Authorization") String token) {
+        User user = authService.authorize(token);
+        if(user == null || user.getUserType() != Constants.roleMap.get(Constants.ROLE_ADMIN)) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        List<OperatorDTO> operatorDTOList = operatorService.findAll();
         return new ResponseEntity<>(operatorDTOList, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OperatorDTO> getOne(@PathVariable int id) {
-        OperatorDTO operatorDTO = operatorService.getOne(id);
+    public ResponseEntity<OperatorDTO> getOne(@PathVariable(name = "id") int operatorId, @RequestHeader("Authorization") String token) {
+        User user = authService.authorize(token);
+        if(user == null || user.getUserType() != Constants.roleMap.get(Constants.ROLE_ADMIN)) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        OperatorDTO operatorDTO = operatorService.findById(operatorId);
         return new ResponseEntity<>(operatorDTO, HttpStatus.OK);
     }
 }

@@ -17,6 +17,8 @@ public class VehicleValidator {
 
         if(vehicleAddDTO.getModel() == null) {
             throw new ApiException("400","Model Required");
+        } else if (!Pattern.matches(Constants.ALPHANUMERIC_REGEX, vehicleAddDTO.getRegNo())) {
+            throw new ApiException("400","Model is invalid");
         }
     }
 }
