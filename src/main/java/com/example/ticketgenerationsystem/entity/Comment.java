@@ -2,7 +2,6 @@ package com.example.ticketgenerationsystem.entity;
 
 import lombok.Data;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 
@@ -10,7 +9,6 @@ import javax.persistence.*;
 @Table(name = "comments")
 @Data
 @SQLDelete(sql = "update comments set deleted = true where id = ?")
-@Where(clause = "deleted = false")
 public class Comment extends AbstractEntity<Integer> {
 
     @Column(columnDefinition="TEXT")

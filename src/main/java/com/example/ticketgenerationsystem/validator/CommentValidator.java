@@ -8,15 +8,12 @@ import com.example.ticketgenerationsystem.request.CommentUpdateRequest;
 import java.util.regex.Pattern;
 
 public class CommentValidator {
-    public static void validate(CommentAddRequest request, int ticketId, int userId) {
+    public static void validate(CommentAddRequest request, int ticketId) {
         if(request.getText() == null || !Pattern.matches(Constants.TEXT_REGEX, request.getText())){
             throw new ApiException("400","Comment text Required");
         }
         if(ticketId == 0) {
             throw new ApiException("400","Ticket id Required");
-        }
-        if(userId == 0) {
-            throw new ApiException("400","User id Required");
         }
     }
 

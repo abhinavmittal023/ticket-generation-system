@@ -46,7 +46,7 @@ public class VehicleService {
 
     public Vehicle findByRegNo(String regNo)  {
         try {
-            return vehicleRepo.findByRegNo(regNo);
+            return vehicleRepo.findByRegNo(regNo.toLowerCase());
         } catch(Exception e) {
             throw new ApiException("400", e.getMessage());
         }

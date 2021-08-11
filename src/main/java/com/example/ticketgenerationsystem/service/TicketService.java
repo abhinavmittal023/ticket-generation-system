@@ -4,6 +4,7 @@ import com.example.ticketgenerationsystem.constant.Constants;
 import com.example.ticketgenerationsystem.convertor.TicketConvertor;
 import com.example.ticketgenerationsystem.entity.Executive;
 import com.example.ticketgenerationsystem.entity.Ticket;
+import com.example.ticketgenerationsystem.entity.User;
 import com.example.ticketgenerationsystem.entity.Vehicle;
 import com.example.ticketgenerationsystem.exception.ApiException;
 import com.example.ticketgenerationsystem.repository.TicketRepo;
@@ -28,9 +29,12 @@ public class TicketService {
     @Autowired
     private ExecutiveService executiveService;
 
-    public Ticket add(TicketGenerateRequest request) {
+    public Ticket add(TicketGenerateRequest request, User user) {
         try {
             Vehicle vehicle = vehicleService.findByRegNo(request.getRegNo());
+            if(vehicle.getOperator().getUser() != user) {
+                throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
+            }
             if(!request.getIssueType().equals(Constants.issueTypeMap.get(Constants.ISSUE_TYPE_GROUND_VISIT_REQUIRED))) {
                 return ticketRepo.save(TicketConvertor.convert(request, Constants.roleMap.get(Constants.TICKET_STATUS_ACTIVE), vehicle, null));
             }
@@ -60,14 +64,14 @@ public class TicketService {
         }
     }
 
-    public Ticket update(TicketUpdateRequest request, int ticketId) {
+    public Ticket update(TicketUpdateRequest request, int ticketId, User user) {
         try {
             Optional<Ticket> ticketOptional = ticketRepo.findById(ticketId);
             if(!ticketOptional.isPresent()) {
                 throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
             }
             Ticket ticket = ticketOptional.get();
-            if(request.getStatus() == null || !request.getStatus().equals(Constants.ticketStatusMap.get(Constants.TICKET_STATUS_CLOSED))) {
+            if(ticket.getVehicle().getOperator().getUser() != user || request.getStatus() == null || !request.getStatus().equals(Constants.ticketStatusMap.get(Constants.TICKET_STATUS_CLOSED))) {
                 throw new ApiException("400", Constants.INVALID_REQUEST_PARAMETERS);
             }
             ticket.setStatus(request.getStatus());

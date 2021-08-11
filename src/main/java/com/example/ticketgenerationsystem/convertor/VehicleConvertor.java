@@ -8,8 +8,8 @@ public class VehicleConvertor {
     public static Vehicle convert(VehicleAddRequest vehicleAddDTO, Operator operatorReference) {
         Vehicle vehicle = new Vehicle();
 
-        vehicle.setRegNo(vehicleAddDTO.getRegNo());
-        vehicle.setModel(vehicleAddDTO.getModel());
+        vehicle.setRegNo(vehicleAddDTO.getRegNo().toLowerCase());
+        vehicle.setModel(vehicleAddDTO.getModel().toLowerCase());
         vehicle.setOperator(operatorReference);
 
         return vehicle;

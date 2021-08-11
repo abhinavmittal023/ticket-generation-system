@@ -69,11 +69,11 @@ public class CommentServiceTest {
         CommentAddRequest request = new CommentAddRequest();
         request.setText("Test Comment");
 
-        when(userService.findById(1)).thenReturn(user);
+        when(userService.findById(1)).thenReturn(Optional.of(user));
         when(ticketService.findById(1)).thenReturn(ticket);
         when(commentRepo.save(comment)).thenReturn(comment);
 
-        Comment comment1 = commentService.add(request, 1, 1);
+        Comment comment1 = commentService.add(request, 1, user);
         assertEquals(comment.getId(), comment1.getId());
     }
 
