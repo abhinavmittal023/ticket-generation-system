@@ -16,11 +16,11 @@ public class AuthenticationController {
     @Autowired
     private AuthenticationService authService;
 
-    @PostMapping("/login")
-    public ResponseEntity<TokenDTO> login(@RequestBody LoginRequest request) {
-        LoginValidator.validate(request);
-        return new ResponseEntity<>(authService.login(request), HttpStatus.OK);
-    }
+//    @PostMapping("/login")
+//    public ResponseEntity<TokenDTO> login(@RequestBody LoginRequest request) {
+//        LoginValidator.validate(request);
+//        return new ResponseEntity<>(authService.login(request), HttpStatus.OK);
+//    }
 
     @DeleteMapping("logout")
     public ResponseEntity<ResponseBean<Object>> logout(@RequestBody TokenDTO request) {
